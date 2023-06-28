@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_firebase/models/game_model.dart';
+import 'package:flutter_application_firebase/screens/game_detail_screen.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class Calendar extends StatefulWidget {
@@ -47,6 +48,16 @@ class _CalendarState extends State<Calendar> {
     return events[day] ?? [];
   }
 
+  void onButtonTap() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const GameDetailScreen(),
+        fullscreenDialog: true,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,6 +69,7 @@ class _CalendarState extends State<Calendar> {
               titleCentered: true,
             ),
             calendarStyle: const CalendarStyle(
+              markersMaxCount: 1,
               weekendTextStyle: TextStyle(
                 color: Colors.red,
               ),
@@ -67,6 +79,7 @@ class _CalendarState extends State<Calendar> {
             firstDay: startDay,
             lastDay: endDay,
             focusedDay: _focusedDay,
+            rowHeight: 38,
             eventLoader: _getEventsForDay,
             selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
             onDaySelected: _onDaySelected,
@@ -76,26 +89,60 @@ class _CalendarState extends State<Calendar> {
             },
           ),
           const SizedBox(height: 8.0),
-          ValueListenableBuilder<List<GameModel>>(
-            valueListenable: _selectedEvents,
-            builder: (context, value, child) {
-              return Container(
+          Expanded(
+            child: _gameSetList(_selectedEvents),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ValueListenableBuilder<List<GameModel>> _gameSetList(
+      ValueNotifier<List<GameModel>> selectedEvents) {
+    return ValueListenableBuilder<List<GameModel>>(
+      valueListenable: selectedEvents,
+      builder: (context, value, child) {
+        return ListView.builder(
+          itemCount: value.length,
+          itemBuilder: (context, index) {
+            return GestureDetector(
+              onTap: onButtonTap,
+              child: Container(
                 margin: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  border: Border.all(),
-                  borderRadius: BorderRadius.circular(12),
+                    // border: Border.all(),
+                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.blue.shade100),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        value[index].title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Colors.black,
+                      )
+                    ],
+                  ),
                 ),
-                child: Column(
-                  children: [for (var game in value) Text(game.title)],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
