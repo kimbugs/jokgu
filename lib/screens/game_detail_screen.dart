@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter_application_firebase/models/user_model.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 
@@ -11,6 +11,11 @@ class GameDetailScreen extends StatefulWidget {
 }
 
 class _GameDetailScreenState extends State<GameDetailScreen> {
+  int _selectedIndex = 0;
+  bool isWinA = false;
+  String stateA = '';
+  String stateB = '';
+
   static List<UserModel> teamA = [
     UserModel(1, 'a'),
     UserModel(2, 'b'),
@@ -24,15 +29,16 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     UserModel(7, 'g'),
     UserModel(8, 'h'),
   ];
+  List<UserModel> allUsers = users;
   List<UserModel> usersA = teamA;
   List<UserModel> selectedUsersA = [];
   List<UserModel> usersB = teamB;
-  List<UserModel?> selectedUsersB = [];
+  List<UserModel> selectedUsersB = [];
 
-  final _itemUsersA = teamA
+  List<MultiSelectItem<UserModel?>> _itemUsersA = users
       .map((user) => MultiSelectItem<UserModel?>(user, user.name))
       .toList();
-  final _itemUsersB = teamB
+  List<MultiSelectItem<UserModel?>> _itemUsersB = users
       .map((user) => MultiSelectItem<UserModel?>(user, user.name))
       .toList();
 
@@ -47,76 +53,48 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Game Set")),
-      bottomNavigationBar: Container(
-        height: 100,
-        decoration: BoxDecoration(color: Colors.green.shade100),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            SizedBox(
-              height: 80,
-              width: 150,
-              child: ElevatedButton(
-                onPressed: () {},
-                child: const Text('Start'),
-              ),
-            ),
-            SizedBox(
-              height: 80,
-              width: 150,
-              child: ElevatedButton(
-                onPressed: () {},
-                child: const Text('stop'),
-              ),
-            )
-          ],
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.deepPurple,
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.restart_alt_rounded), label: 'Random'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.filter_1_rounded), label: 'A'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.filter_2_rounded), label: 'B'),
+        ],
+        onTap: (int index) {
+          switch (index) {
+            case 0:
+              showRandomDialog(context);
+              break;
+            case 1:
+              isWinA = true;
+              setState(() {
+                stateA = 'Win';
+                stateB = 'Loss';
+              });
+              break;
+            case 2:
+              isWinA = false;
+              setState(() {
+                stateA = 'Loss';
+                stateB = 'Win';
+              });
+              break;
+          }
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
       ),
       body: Container(
         padding: const EdgeInsets.all(10),
         child: Column(
           children: [
             Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.red.shade100),
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          const Text('A Team'),
-                          const Text('Position : '),
-                          Row(
-                            children: [
-                              const Text('Point : '),
-                              SizedBox(
-                                height: 50,
-                                width: 50,
-                                child: TextField(
-                                  textAlignVertical: TextAlignVertical.top,
-                                  textAlign: TextAlign.center,
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly
-                                  ],
-                                  decoration: const InputDecoration(
-                                    border: OutlineInputBorder(),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: teamCard('A', stateA, _itemUsersA, selectedUsersA),
             ),
             const Divider(
               color: Colors.grey,
@@ -126,35 +104,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
               height: 20,
             ),
             Expanded(
-              child: Card(
-                elevation: 10,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    ListTile(
-                      title: const Text(
-                        'B',
-                        style: TextStyle(
-                          fontSize: 20,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          MultiSelectChipField<UserModel?>(
-                            items: _itemUsersB,
-                            title: const Text('Player'),
-                            initialValue: [teamB[0], teamB[1]],
-                            onTap: (List<UserModel?> values) {
-                              selectedUsersB = values;
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: teamCard('B', stateB, _itemUsersB, selectedUsersB),
             ),
           ],
         ),
@@ -162,16 +112,97 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     );
   }
 
-  InputChip playerChip(String name) {
-    return InputChip(
-      label: Text(name),
-      backgroundColor: Colors.amber,
-      onPressed: () {},
-      onDeleted: () {
-        setState(() {
-          usersB.removeWhere((element) => element.name == name);
-        });
-      },
+  void showRandomDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Random'),
+        content: const Text(''),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Close'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              List<UserModel> randomItem = (users..shuffle());
+              int len = randomItem.length ~/ 2;
+              Iterable<List<UserModel>> randomUsers = randomItem.slices(len);
+              setState(() {
+                selectedUsersA = randomUsers.first;
+                selectedUsersB = randomUsers.last;
+                _itemUsersA = selectedUsersA
+                    .map((user) => MultiSelectItem<UserModel?>(user, user.name))
+                    .toList();
+
+                _itemUsersB = selectedUsersB
+                    .map((user) => MultiSelectItem<UserModel?>(user, user.name))
+                    .toList();
+              });
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Card teamCard(String teamName, String stateWin,
+      List<MultiSelectItem<UserModel?>> items, List<UserModel?> selectedUsers) {
+    return Card(
+      elevation: 10,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          ListTile(
+            title: Text(
+              teamName,
+              style: const TextStyle(
+                fontSize: 20,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(
+                  height: 20,
+                ),
+                MultiSelectChipField<UserModel?>(
+                  items: items,
+                  scroll: false,
+                  title: const Text('Player'),
+                  initialValue: selectedUsers,
+                  onTap: (List<UserModel?> values) {
+                    selectedUsers = values;
+                    setState(() {
+                      _itemUsersA = users
+                          .map((user) =>
+                              MultiSelectItem<UserModel?>(user, user.name))
+                          .toList();
+                    });
+                    print(items.length);
+                  },
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      stateWin,
+                      style: const TextStyle(fontSize: 35),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
