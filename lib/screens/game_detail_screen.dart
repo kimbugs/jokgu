@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_application_firebase/models/user_model.dart';
-import 'package:multi_select_flutter/multi_select_flutter.dart';
 
 class GameDetailScreen extends StatefulWidget {
   const GameDetailScreen({super.key});
@@ -15,44 +14,29 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   bool isWinA = false;
   String stateA = '';
   String stateB = '';
-
-  static List<UserModel> teamA = [
-    UserModel(1, 'a'),
-    UserModel(2, 'b'),
-    UserModel(3, 'c'),
-    UserModel(4, 'd'),
-  ];
-
-  static List<UserModel> teamB = [
-    UserModel(5, 'e'),
-    UserModel(6, 'f'),
-    UserModel(7, 'g'),
-    UserModel(8, 'h'),
-  ];
-  List<UserModel> allUsers = users;
-  List<UserModel> usersA = teamA;
-  List<UserModel> selectedUsersA = [];
-  List<UserModel> usersB = teamB;
-  List<UserModel> selectedUsersB = [];
-
-  List<MultiSelectItem<UserModel?>> _itemUsersA = users
-      .map((user) => MultiSelectItem<UserModel?>(user, user.name))
-      .toList();
-  List<MultiSelectItem<UserModel?>> _itemUsersB = users
-      .map((user) => MultiSelectItem<UserModel?>(user, user.name))
-      .toList();
+  final Set<UserModel> _users = users.toSet();
+  final Set<UserModel> _userA = <UserModel>{};
+  final Set<UserModel> _userB = <UserModel>{};
+  final Set<UserModel> _selectedA = <UserModel>{};
+  final Set<UserModel> _selectedB = <UserModel>{};
 
   @override
   void initState() {
-    selectedUsersA = usersA;
-    selectedUsersB = usersB;
+    _userA.addAll(_users);
+    _userB.addAll(_users);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final TextTheme textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Game Set")),
+      appBar: AppBar(
+          title: Text(
+        "Game Set",
+        style: textTheme.headlineMedium,
+      )),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.deepPurple,
@@ -67,7 +51,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
         onTap: (int index) {
           switch (index) {
             case 0:
-              showRandomDialog(context);
+              showRandomDialog(context, _users);
               break;
             case 1:
               isWinA = true;
@@ -94,7 +78,8 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
         child: Column(
           children: [
             Expanded(
-              child: teamCard('A', stateA, _itemUsersA, selectedUsersA),
+              child: teamCard(
+                  'A', stateA, _userA, _userB, _selectedA, _selectedB, _users),
             ),
             const Divider(
               color: Colors.grey,
@@ -104,7 +89,8 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
               height: 20,
             ),
             Expanded(
-              child: teamCard('B', stateB, _itemUsersB, selectedUsersB),
+              child: teamCard(
+                  'B', stateB, _userB, _userA, _selectedB, _selectedA, _users),
             ),
           ],
         ),
@@ -112,7 +98,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     );
   }
 
-  void showRandomDialog(BuildContext context) {
+  void showRandomDialog(BuildContext context, Set<UserModel> users) {
     showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(
@@ -128,19 +114,18 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              List<UserModel> randomItem = (users..shuffle());
+              List<UserModel> randomItem = (users.toList()..shuffle());
               int len = randomItem.length ~/ 2;
               Iterable<List<UserModel>> randomUsers = randomItem.slices(len);
               setState(() {
-                selectedUsersA = randomUsers.first;
-                selectedUsersB = randomUsers.last;
-                _itemUsersA = selectedUsersA
-                    .map((user) => MultiSelectItem<UserModel?>(user, user.name))
-                    .toList();
-
-                _itemUsersB = selectedUsersB
-                    .map((user) => MultiSelectItem<UserModel?>(user, user.name))
-                    .toList();
+                _selectedA.clear();
+                _selectedB.clear();
+                _selectedA.addAll(randomUsers.first.toSet());
+                _selectedB.addAll(randomUsers.last.toSet());
+                _userA.clear();
+                _userA.addAll(_selectedA);
+                _userB.clear();
+                _userB.addAll(_selectedB);
               });
             },
             child: const Text('OK'),
@@ -150,45 +135,49 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     );
   }
 
-  Card teamCard(String teamName, String stateWin,
-      List<MultiSelectItem<UserModel?>> items, List<UserModel?> selectedUsers) {
+  Card teamCard(
+      String teamName,
+      String stateWin,
+      Set<UserModel> userMain,
+      Set<UserModel> userSub,
+      Set<UserModel> selectedMain,
+      Set<UserModel> selectedSub,
+      Set<UserModel> users) {
+    final TextTheme textTheme = Theme.of(context).textTheme;
+
     return Card(
       elevation: 10,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           ListTile(
-            title: Text(
-              teamName,
-              style: const TextStyle(
-                fontSize: 20,
-              ),
-            ),
+            title: Text(teamName, style: textTheme.titleLarge),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(
-                  height: 20,
+                const SizedBox(height: 20),
+                Wrap(
+                  children: userMain.map((UserModel user) {
+                    return FilterChip(
+                      label: Text(user.name),
+                      selected: selectedMain.contains(user),
+                      onSelected: (bool value) {
+                        setState(() {
+                          if (value) {
+                            selectedMain.add(user);
+                          } else {
+                            selectedMain.remove(user);
+                          }
+                          userMain.addAll(users);
+                          userSub.addAll(users);
+                          userMain.removeAll(selectedSub);
+                          userSub.removeAll(selectedMain);
+                        });
+                      },
+                    );
+                  }).toList(),
                 ),
-                MultiSelectChipField<UserModel?>(
-                  items: items,
-                  scroll: false,
-                  title: const Text('Player'),
-                  initialValue: selectedUsers,
-                  onTap: (List<UserModel?> values) {
-                    selectedUsers = values;
-                    setState(() {
-                      _itemUsersA = users
-                          .map((user) =>
-                              MultiSelectItem<UserModel?>(user, user.name))
-                          .toList();
-                    });
-                    print(items.length);
-                  },
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

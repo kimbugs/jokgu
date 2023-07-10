@@ -18,8 +18,12 @@ samples, guidance on mobile development, and a full API reference.
 ## firebase flutter 연동
 
 [firebase flutter 연동](https://www.youtube.com/watch?v=RiViG-3GHig)
+
 [firebase flutter 연동 추가](https://firebase.google.com/docs/flutter/setup?hl=ko&platform=ios)
+
 [달력](https://velog.io/@jun7332568/%ED%94%8C%EB%9F%AC%ED%84%B0flutter-%EB%8B%AC%EB%A0%A5-Event-%EA%B5%AC%ED%98%84%ED%95%B4%EB%B3%B4%EA%B8%B0-Tablecalendar-%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC)
+
+[firebase firestorage](https://funncy.github.io/flutter/2021/03/06/firestore/)
 
 firebase main page에 추가
 ```

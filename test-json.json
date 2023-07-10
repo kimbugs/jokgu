@@ -1,0 +1,15 @@
+{
+    "2023-07-04": {
+        "users": [
+            "a", "b", "c", "d", "e", "f"
+        ],
+        "games" : [
+            {
+                "title": "1 set",
+                "userA": ["a", "b", "c"],
+                "userB": ["d", "e", "f"],
+                "isWinA" : true
+            }
+        ]
+    }
+}
