@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Settings extends StatefulWidget {
-  const Settings({super.key});
+class UsersScreen extends StatefulWidget {
+  const UsersScreen({super.key});
 
   @override
-  State<Settings> createState() => _SettingsState();
+  State<UsersScreen> createState() => _UsersScreenState();
 }
 
 class Game {
@@ -114,7 +114,9 @@ class User {
       };
 }
 
-class _SettingsState extends State<Settings> {
+enum MoreItem { edit, delete }
+
+class _UsersScreenState extends State<UsersScreen> {
   FirebaseFirestore db = FirebaseFirestore.instance;
 
   @override
@@ -124,7 +126,6 @@ class _SettingsState extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
-    final TextTheme textTheme = Theme.of(context).textTheme;
     final controller = TextEditingController();
 
     return Scaffold(
@@ -162,10 +163,91 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  Widget buildUser(User user) => ListTile(
+  Widget buildUser(User user) {
+    MoreItem? selectedMenu;
+    final controller = TextEditingController();
+
+    return Card(
+      child: ListTile(
         leading: CircleAvatar(child: Text(user.name)),
         title: Text(user.name),
-      );
+        subtitle: Text(user.id),
+        subtitleTextStyle: const TextStyle(fontSize: 10),
+        trailing: PopupMenuButton<MoreItem>(
+          initialValue: selectedMenu,
+          onSelected: (MoreItem item) {
+            switch (item) {
+              case MoreItem.edit:
+                controller.text = user.name;
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) => AlertDialog(
+                    title: const Text('Edit'),
+                    content: TextField(controller: controller),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, 'Cancel'),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                          onPressed: () {
+                            updateUser(id: user.id, name: controller.text);
+                            Navigator.pop(context, 'OK');
+                          },
+                          child: const Text('OK')),
+                    ],
+                  ),
+                );
+                break;
+              case MoreItem.delete:
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) => AlertDialog(
+                    title: const Text('Delete'),
+                    content: const Text('Are you sure?'),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, 'Cancel'),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                          onPressed: () {
+                            deleteUser(id: user.id);
+                            Navigator.pop(context, 'OK');
+                          },
+                          child: const Text('OK')),
+                    ],
+                  ),
+                );
+                break;
+            }
+          },
+          itemBuilder: (context) => <PopupMenuEntry<MoreItem>>[
+            const PopupMenuItem<MoreItem>(
+              value: MoreItem.edit,
+              child: Text('Edit'),
+            ),
+            const PopupMenuItem<MoreItem>(
+              value: MoreItem.delete,
+              child: Text('Delete'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future updateUser({required String id, required String name}) async {
+    final docUser = FirebaseFirestore.instance.collection('user').doc(id);
+
+    await docUser.update({'name': name});
+  }
+
+  Future deleteUser({required String id}) async {
+    final docUser = FirebaseFirestore.instance.collection('user').doc(id);
+
+    await docUser.delete();
+  }
 
   Stream<List<User>> readUsers() => FirebaseFirestore.instance
       .collection('user')
@@ -173,9 +255,9 @@ class _SettingsState extends State<Settings> {
       .map((event) => event.docs.map((e) => User.fromJson(e.data())).toList());
 
   Future createUser({required String name}) async {
-    final docUser = FirebaseFirestore.instance.collection('user').doc(name);
+    final docUser = FirebaseFirestore.instance.collection('user').doc();
 
-    final user = User(id: name, name: name);
+    final user = User(id: docUser.id, name: name);
     await docUser.set(user.toJson());
   }
 }

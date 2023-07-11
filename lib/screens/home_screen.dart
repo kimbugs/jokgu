@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_firebase/pages/home_page.dart';
 import 'package:flutter_application_firebase/pages/calendar_page.dart';
 import 'package:flutter_application_firebase/pages/settings_page.dart';
+import 'package:flutter_application_firebase/pages/user_page.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,6 +39,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Theme.of(context).colorScheme.onSecondaryContainer),
           ),
           NavigationDestination(
+            icon: const Icon(Icons.account_circle_rounded),
+            label: "user",
+            selectedIcon: Icon(Icons.account_circle_rounded,
+                color: Theme.of(context).colorScheme.onSecondaryContainer),
+          ),
+          NavigationDestination(
             icon: const Icon(Icons.settings),
             label: "Settings",
             selectedIcon: Icon(Icons.settings,
@@ -52,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: const [
           HomePage(),
           CalendarPage(),
+          UsersPage(),
           SettingsPage(),
         ],
       )),
