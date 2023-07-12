@@ -14,7 +14,8 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   bool isWinA = false;
   String stateA = '';
   String stateB = '';
-  final Set<UserModel> _users = users.toSet();
+  //final Set<UserModel> _users = users.toSet();
+  final Set<UserModel> _users = <UserModel>{};
   final Set<UserModel> _userA = <UserModel>{};
   final Set<UserModel> _userB = <UserModel>{};
   final Set<UserModel> _selectedA = <UserModel>{};

@@ -11,7 +11,7 @@ class Calendar extends StatefulWidget {
 }
 
 class _CalendarState extends State<Calendar> {
-  late final ValueNotifier<List<GameModel>> _selectedEvents;
+  // late final ValueNotifier<List<GameModel>> _selectedEvents;
   final DateTime startDay = DateTime(1800);
   final DateTime endDay = DateTime(3000);
   DateTime _focusedDay = DateTime.now();
@@ -22,12 +22,12 @@ class _CalendarState extends State<Calendar> {
     super.initState();
 
     _selectedDay = _focusedDay;
-    _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
+    //_selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
   }
 
   @override
   void dispose() {
-    _selectedEvents.dispose();
+    // _selectedEvents.dispose();
 
     super.dispose();
   }
@@ -40,13 +40,13 @@ class _CalendarState extends State<Calendar> {
         _focusedDay = focusedDay;
       });
 
-      _selectedEvents.value = _getEventsForDay(selectedDay);
+      //_selectedEvents.value = _getEventsForDay(selectedDay);
     }
   }
 
-  List<GameModel> _getEventsForDay(DateTime day) {
-    return events[day] ?? [];
-  }
+  // List<GameModel> _getEventsForDay(DateTime day) {
+  //   return events[day] ?? [];
+  // }
 
   void onButtonTap() {
     Navigator.push(
@@ -80,7 +80,7 @@ class _CalendarState extends State<Calendar> {
             lastDay: endDay,
             focusedDay: _focusedDay,
             rowHeight: 38,
-            eventLoader: _getEventsForDay,
+            //eventLoader: _getEventsForDay,
             selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
             onDaySelected: _onDaySelected,
             onPageChanged: (focusedDay) {
@@ -89,9 +89,9 @@ class _CalendarState extends State<Calendar> {
             },
           ),
           const SizedBox(height: 8.0),
-          Expanded(
-            child: _gameSetList(_selectedEvents),
-          ),
+          // Expanded(
+          //   child: _gameSetList(_selectedEvents),
+          // ),
         ],
       ),
     );
@@ -125,7 +125,7 @@ class _CalendarState extends State<Calendar> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        value[index].title,
+                        value[index].day,
                         style: const TextStyle(
                           fontSize: 20,
                           color: Colors.black,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_application_firebase/models/user_model.dart';
+import 'package:flutter_application_firebase/repo/user_repository.dart';
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({super.key});
@@ -8,117 +9,10 @@ class UsersScreen extends StatefulWidget {
   State<UsersScreen> createState() => _UsersScreenState();
 }
 
-class Game {
-  String? day;
-  List<User>? users;
-  List<GameSet>? gameSets;
-
-  Game({
-    this.day,
-    this.users,
-    this.gameSets,
-  });
-
-  Game.fromJson(Map<String, dynamic> json) {
-    day = json['day'];
-    if (json['users'] != null) {
-      users = <User>[];
-      json['users'].forEach((v) {
-        users!.add(User.fromJson(v));
-      });
-    }
-
-    if (json['gameSets'] != null) {
-      gameSets = <GameSet>[];
-      json['gameSets'].forEach((v) {
-        gameSets!.add(GameSet.fromJson(v));
-      });
-    }
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['day'] = day;
-    if (users != null) {
-      data['users'] = users!.map((v) => v.toJson()).toList();
-    }
-
-    if (gameSets != null) {
-      data['gameSets'] = gameSets!.map((v) => v.toJson()).toList();
-    }
-
-    return data;
-  }
-}
-
-class GameSet {
-  String? title;
-  List<User>? teamA;
-  List<User>? teamB;
-  bool? isWinA;
-
-  GameSet({
-    this.title,
-    this.teamA,
-    this.teamB,
-    this.isWinA,
-  });
-
-  GameSet.fromJson(Map<String, dynamic> json) {
-    title = json['title'];
-    isWinA = json['isWinA'];
-    if (json['teamA'] != null) {
-      teamA = <User>[];
-      json['teamA'].forEach((v) {
-        teamA!.add(User.fromJson(v));
-      });
-    }
-
-    if (json['teamB'] != null) {
-      teamB = <User>[];
-      json['teamB'].forEach((v) {
-        teamB!.add(User.fromJson(v));
-      });
-    }
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['title'] = title;
-    data['isWinA'] = isWinA;
-    if (teamA != null) {
-      data['teamA'] = teamA!.map((v) => v.toJson()).toList();
-    }
-
-    if (teamB != null) {
-      data['teamB'] = teamB!.map((v) => v.toJson()).toList();
-    }
-
-    return data;
-  }
-}
-
-class User {
-  final String id;
-  final String name;
-
-  User({required this.id, required this.name});
-
-  User.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        name = json['name'];
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-      };
-}
-
 enum MoreItem { edit, delete }
 
 class _UsersScreenState extends State<UsersScreen> {
-  FirebaseFirestore db = FirebaseFirestore.instance;
-
+  final userRepository = UserRepository();
   @override
   void initState() {
     super.initState();
@@ -136,14 +30,14 @@ class _UsersScreenState extends State<UsersScreen> {
             onPressed: () {
               final name = controller.text;
 
-              createUser(name: name);
+              userRepository.createUser(name: name);
             },
             icon: const Icon(Icons.add),
           ),
         ],
       ),
-      body: StreamBuilder<List<User>>(
-        stream: readUsers(),
+      body: StreamBuilder<List<UserModel>>(
+        stream: userRepository.readUsers(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Text('Something went wrong! ${snapshot.error}');
@@ -163,7 +57,7 @@ class _UsersScreenState extends State<UsersScreen> {
     );
   }
 
-  Widget buildUser(User user) {
+  Widget buildUser(UserModel user) {
     MoreItem? selectedMenu;
     final controller = TextEditingController();
 
@@ -191,7 +85,8 @@ class _UsersScreenState extends State<UsersScreen> {
                       ),
                       TextButton(
                           onPressed: () {
-                            updateUser(id: user.id, name: controller.text);
+                            userRepository.updateUser(
+                                id: user.id, name: controller.text);
                             Navigator.pop(context, 'OK');
                           },
                           child: const Text('OK')),
@@ -212,7 +107,7 @@ class _UsersScreenState extends State<UsersScreen> {
                       ),
                       TextButton(
                           onPressed: () {
-                            deleteUser(id: user.id);
+                            userRepository.deleteUser(id: user.id);
                             Navigator.pop(context, 'OK');
                           },
                           child: const Text('OK')),
@@ -235,29 +130,5 @@ class _UsersScreenState extends State<UsersScreen> {
         ),
       ),
     );
-  }
-
-  Future updateUser({required String id, required String name}) async {
-    final docUser = FirebaseFirestore.instance.collection('user').doc(id);
-
-    await docUser.update({'name': name});
-  }
-
-  Future deleteUser({required String id}) async {
-    final docUser = FirebaseFirestore.instance.collection('user').doc(id);
-
-    await docUser.delete();
-  }
-
-  Stream<List<User>> readUsers() => FirebaseFirestore.instance
-      .collection('user')
-      .snapshots()
-      .map((event) => event.docs.map((e) => User.fromJson(e.data())).toList());
-
-  Future createUser({required String name}) async {
-    final docUser = FirebaseFirestore.instance.collection('user').doc();
-
-    final user = User(id: docUser.id, name: name);
-    await docUser.set(user.toJson());
   }
 }

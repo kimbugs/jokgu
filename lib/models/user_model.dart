@@ -1,31 +1,15 @@
 class UserModel {
-  int id;
-  String name;
+  final String id;
+  final String name;
 
-  UserModel(this.id, this.name);
+  UserModel({required this.id, required this.name});
+
+  UserModel.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        name = json['name'];
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+      };
 }
-
-List<UserModel> users = [
-  UserModel(1, 'a'),
-  UserModel(2, 'b'),
-  UserModel(3, 'c'),
-  UserModel(4, 'd'),
-  UserModel(5, 'e'),
-  UserModel(6, 'f'),
-  UserModel(7, 'g'),
-  UserModel(8, 'h'),
-];
-
-// List<UserModel> teamA = [
-//   UserModel(1, 'a'),
-//   UserModel(2, 'b'),
-//   UserModel(3, 'c'),
-//   UserModel(4, 'd'),
-// ];
-
-// List<UserModel> teamB = [
-//   UserModel(5, 'e'),
-//   UserModel(6, 'f'),
-//   UserModel(7, 'g'),
-//   UserModel(8, 'h'),
-// ];

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_firebase/pages/home_page.dart';
-import 'package:flutter_application_firebase/pages/calendar_page.dart';
+import 'package:flutter_application_firebase/pages/game_page.dart';
 import 'package:flutter_application_firebase/pages/settings_page.dart';
 import 'package:flutter_application_firebase/pages/user_page.dart';
 
@@ -33,9 +33,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Theme.of(context).colorScheme.onSecondaryContainer),
           ),
           NavigationDestination(
-            icon: const Icon(Icons.calendar_month_rounded),
-            label: "Calendar",
-            selectedIcon: Icon(Icons.calendar_month_rounded,
+            icon: const Icon(Icons.sports_soccer_rounded),
+            label: "Game",
+            selectedIcon: Icon(Icons.sports_soccer_rounded,
                 color: Theme.of(context).colorScheme.onSecondaryContainer),
           ),
           NavigationDestination(
@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
         index: selectedIndex,
         children: const [
           HomePage(),
-          CalendarPage(),
+          GamePage(),
           UsersPage(),
           SettingsPage(),
         ],

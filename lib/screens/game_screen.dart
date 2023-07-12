@@ -1,21 +1,19 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_firebase/models/game_model.dart';
+import 'package:flutter_application_firebase/repo/game_repository.dart';
+import 'package:flutter_application_firebase/screens/game_set_screen.dart';
 import 'package:intl/intl.dart';
 
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+class GameScreen extends StatefulWidget {
+  const GameScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  State<GameScreen> createState() => _GameScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _GameScreenState extends State<GameScreen> {
   final dateController = TextEditingController();
-  final CollectionReference<Map<String, dynamic>> _userDB =
-      FirebaseFirestore.instance.collection('user');
-  final CollectionReference<Map<String, dynamic>> _gameDB =
-      FirebaseFirestore.instance.collection('game');
+  final gameRepository = GameRepository();
 
   @override
   void initState() {
@@ -58,7 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () {
               final day = dateController.text;
               if (day != '') {
-                createGame(day: day);
+                gameRepository.createGame(day: day);
               }
             },
             icon: const Icon(Icons.add),
@@ -66,7 +64,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
       body: StreamBuilder<List<GameModel>>(
-        stream: readGames(),
+        stream: gameRepository.readGames(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Text('Something wet wrong! ${snapshot.error}');
@@ -91,7 +89,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: ListTile(
         leading: const CircleAvatar(child: Text('0')),
         title: Text(game.day),
-        onTap: () {},
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GameSetScreen(
+                game: game,
+              ),
+              //fullscreenDialog: true,
+            ),
+          );
+        },
         trailing: IconButton(
           icon: const Icon(Icons.delete_rounded),
           onPressed: () {
@@ -107,7 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   TextButton(
                       onPressed: () {
-                        deleteGame(id: game.id);
+                        gameRepository.deleteGame(id: game.id);
                         Navigator.pop(context, 'OK');
                       },
                       child: const Text('OK')),
@@ -119,21 +127,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
-  Future deleteGame({required String id}) async {
-    final docGame = _gameDB.doc(id);
-
-    await docGame.delete();
-  }
-
-  Future createGame({required String day}) async {
-    final docGame = _gameDB.doc(day);
-
-    final game = GameModel(id: docGame.id, day: day);
-    await docGame.set(game.toJson());
-  }
-
-  Stream<List<GameModel>> readGames() =>
-      _gameDB.orderBy("id", descending: true).snapshots().map((event) =>
-          event.docs.map((e) => GameModel.fromJson(e.data())).toList());
 }
