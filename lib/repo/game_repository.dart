@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application_firebase/models/game_model.dart';
+import 'package:flutter_application_firebase/models/user_model.dart';
 
 class GameRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -17,18 +18,37 @@ class GameRepository {
   }
 
   Future createGame({required String day}) async {
-    final docGame = _db.collection('game').doc(day);
+    bool exist = await checkExist(day);
+    if (!exist) {
+      final docGame = _db.collection('game').doc(day);
 
-    final game = GameModel(id: docGame.id, day: day);
-    await docGame.set(game.toJson());
+      final game = GameModel(
+          id: docGame.id,
+          day: day,
+          gameSets: <GameSetModel>[],
+          users: <UserModel>[]);
+      await docGame.set(game.toJson());
+    }
   }
 
-  // Future createGameSet(
-  //     {required String id, required GameSetModel gameSet}) async {
-  //   final docGame = _db.collection('game').doc(id);
+  static Future<bool> checkExist(String docID) async {
+    bool exist = false;
+    try {
+      await FirebaseFirestore.instance.doc("game/$docID").get().then((doc) {
+        exist = doc.exists;
+      });
+      return exist;
+    } catch (e) {
+      // If any error
+      return false;
+    }
+  }
 
-  //   await docGame.update({'gameSets': })
-  // }
+  Stream<List<GameSetModel>> readGameSets(String id) => _db
+      .collection('game')
+      .doc(id)
+      .snapshots()
+      .map((event) => GameModel.fromJson(event.data()!).gameSets!);
 
   Stream<List<GameModel>> readGames() => _db
       .collection('game')

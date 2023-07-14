@@ -66,23 +66,23 @@ class GameModel {
 }
 
 class GameSetModel {
-  String? id;
-  String? title;
+  int id;
+  String title;
   List<UserModel>? teamA;
   List<UserModel>? teamB;
   bool? isWinA;
 
   GameSetModel({
-    this.id,
-    this.title,
+    required this.id,
+    required this.title,
     this.teamA,
     this.teamB,
     this.isWinA,
   });
 
-  GameSetModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    title = json['title'];
+  GameSetModel.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        title = json['title'] {
     isWinA = json['isWinA'];
     if (json['teamA'] != null) {
       teamA = <UserModel>[];

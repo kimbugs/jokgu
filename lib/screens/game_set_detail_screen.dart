@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter_application_firebase/models/game_model.dart';
 import 'package:flutter_application_firebase/models/user_model.dart';
 
-class GameDetailScreen extends StatefulWidget {
-  const GameDetailScreen({super.key});
+class GameSetDetailScreen extends StatefulWidget {
+  final GameModel game;
+  final GameSetModel gameSet;
+
+  const GameSetDetailScreen({
+    super.key,
+    required this.game,
+    required this.gameSet,
+  });
 
   @override
-  State<GameDetailScreen> createState() => _GameDetailScreenState();
+  State<GameSetDetailScreen> createState() => _GameSetDetailScreenState();
 }
 
-class _GameDetailScreenState extends State<GameDetailScreen> {
+class _GameSetDetailScreenState extends State<GameSetDetailScreen> {
   int _selectedIndex = 0;
   bool isWinA = false;
   String stateA = '';
@@ -35,7 +43,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     return Scaffold(
       appBar: AppBar(
           title: Text(
-        "Game Set",
+        widget.gameSet.title,
         style: textTheme.headlineMedium,
       )),
       bottomNavigationBar: BottomNavigationBar(
